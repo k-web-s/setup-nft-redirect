@@ -4,7 +4,7 @@ A helper image to set up tcp/udp port redirects. Useful within k8s with kube-rou
 
 ## Usage
 
-Usually containers run without root privileges, thus they cannot bind to ports lower than 1024. To keep this restriction, and also allow for lower bound ports to be used as service ports, port-mapping can be setup. The following deployment example shows this:
+Usually containers run without root privileges, thus they cannot bind to privileged ports. To keep this restriction and allow for privileged ports to be used as service ports, a port-mapping can be setup. The following deployment example shows this:
 
 ```
 ---
