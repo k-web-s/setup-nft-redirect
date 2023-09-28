@@ -1,0 +1,48 @@
+#!/bin/sh
+
+set -e
+
+# Create main table & chain
+nft flush ruleset
+nft add table inet main
+nft add chain inet main redir '{ type nat hook prerouting priority dstnat; }'
+echo "[+] Created initial ruleset"
+
+# Process rules
+for rule in "$@" ${REDIRECT_RULES} ; do
+	proto="${rule%%:*}"
+	map="${rule#*:}"
+	src="${map%%:*}"
+	dst="${map#*:}"
+	flags=
+
+	case "$proto" in
+		tcp)
+			flags="tcp flags syn / syn,rst"
+			;;
+		udp)
+			;;
+		*)
+			echo "[-] unrecognized protocol: $proto"
+			exit 1
+			;;
+	esac
+
+	if [ -z "$src" ]; then
+		echo "[-] source is undefined"
+		exit 2
+	fi
+
+	if [ -z "$dst" ]; then
+		echo "[-] destination is undefined"
+		exit 3
+	fi
+
+	nft add rule inet main redir "$proto dport $src $flags redirect to :$dst"
+
+	echo "[+] Processed $rule"
+done
+
+echo ""
+echo "[=] Displaying final NFT ruleset"
+nft list ruleset
